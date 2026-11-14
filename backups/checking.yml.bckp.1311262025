@@ -1,0 +1,137 @@
+---
+- name: Pruebas de validacion sitio recien aprovisionado
+  hosts: all
+  gather_facts: false
+
+  vars:
+    lan_if: Ethernet0/1
+    guardar_reporte: true
+    comandos_comunes:
+      - show crypto ikev2 sa
+      - show dmvpn
+      - show interfaces description
+      - show ip interface brief
+      - show ip ospf neighbor
+      - show ip route ospf
+      - show ipv6 interface brief
+      - show ipv6 ospf neighbor
+      - show ipv6 route ospf
+
+    es_spoke: "{{ inventory_hostname in groups['cisco_spokes'] }}"
+    spokes_otros: "{{ groups['cisco_spokes'] | difference([inventory_hostname]) }}"
+    destino_host: "{{ spokes_otros | first | default('') }}"
+    destino_id: "{{ hostvars[destino_host].lan_site_id if destino_host != '' else '' }}"
+    destino_ip: "10.0.{{ destino_id }}.10"
+    destino_desc: "{{ hostvars[destino_host].lan_pc_dsc | default('VPC') if destino_host != '' else '' }}"
+
+  tasks:
+    # ---------- Comandos show (hubs y spokes) ----------
+    - name: Ejecutar comandos show
+      cisco.ios.ios_command:
+        commands: "{{ comandos_comunes }}"
+      register: r_show
+
+    - name: "[{{ inventory_hostname }}] Resultado de comandos show"
+      ansible.builtin.debug:
+        msg: "{{ item.1 }}\r\n\r\n\r\n__________________________________________________________________________"
+
+      loop: "{{ comandos_comunes | zip(r_show.stdout) | list }}"
+      loop_control:
+        label: "{{ item.0 }}"
+
+    # ---------- Pruebas extremo a extremo (solo spokes) ----------
+    - name: Validar destino de pruebas
+      ansible.builtin.assert:
+        that: destino_host | length > 0
+        fail_msg: "No hay otro spoke en 'routers_spokes'; usa -e destino_host=<nombre>"
+      when: es_spoke
+
+    - name: "Traceroute x2 hacia {{ destino_ip }} (1.º vía hub, 2.º directo si NHRP redirect funciona)"
+      cisco.ios.ios_command:
+        commands:
+          - "traceroute {{ destino_ip }} numeric source {{ lan_if }}"
+      vars:
+        ansible_command_timeout: 120
+      loop: [1, 2]
+      loop_control:
+        pause: 3
+        label: "intento {{ item }}"
+      register: r_trace
+      when: es_spoke
+
+    - name: Ping con paquetes de 1400 bytes
+      cisco.ios.ios_command:
+        commands:
+          - "ping ip {{ destino_ip }} size 1400 source {{ lan_if }}"
+      vars:
+        ansible_command_timeout: 120
+      register: r_ping
+      when: es_spoke
+
+    - name: "[{{ inventory_hostname }}] Traceroute -> {{ destino_ip }} ({{ destino_desc }})"
+      ansible.builtin.debug:
+        msg: "{{ item.stdout[0] }}}\r\n\r\n\r\n__________________________________________________________________________"
+      loop: "{{ r_trace.results }}"
+      loop_control:
+        label: "traceroute #{{ item.item }}"
+      when: es_spoke
+
+    - name: "[{{ inventory_hostname }}] Ping 1400 -> {{ destino_ip }} ({{ destino_desc }})"
+      ansible.builtin.debug:
+        msg: "{{ r_ping.stdout[0] }}}\r\n\r\n\r\n__________________________________________________________________________"
+      when: es_spoke
+
+    # ---------- Resumen legible ----------
+    - name: Calcular indicadores
+      ansible.builtin.set_fact:
+        n_ike: "{{ r_show.stdout[0] | regex_findall('READY') | length }}"
+        n_ospf: "{{ r_show.stdout[4] | regex_findall('FULL/') | length }}"
+        hops_1: "{{ (r_trace.results[0].stdout[0].splitlines() | select('match', '^\\s*\\d+\\s') | list | length) if es_spoke else 0 }}"
+        hops_2: "{{ (r_trace.results[1].stdout[0].splitlines() | select('match', '^\\s*\\d+\\s') | list | length) if es_spoke else 0 }}"
+        ping_ok: "{{ ('Success rate is 100 percent' in r_ping.stdout[0]) if es_spoke else none }}"
+
+    - name: "[{{ inventory_hostname }}] RESUMEN"
+      ansible.builtin.debug:
+        msg: |
+          Sesiones IKEv2 en READY : {{ n_ike }}
+          Vecinos OSPF en FULL    : {{ n_ospf }}
+          {% if es_spoke %}
+          Destino de pruebas      : {{ destino_ip }} ({{ destino_desc }} en {{ destino_host }})
+          Traceroute #1 (saltos)  : {{ hops_1 }}
+          Traceroute #2 (saltos)  : {{ hops_2 }}
+          Shortcut NHRP           : {{ 'OK (ruta directa spoke-a-spoke)' if hops_2 | int < hops_1 | int else 'NO DETECTADO' }}
+          Ping 1400 bytes         : {{ 'OK (100%)' if ping_ok else 'FALLO / pérdida' }}
+          {% endif %}
+
+    # ---------- Reporte en archivo (en el servidor Ansible) ----------
+    - name: Crear carpeta de reportes
+      ansible.builtin.file:
+        path: "{{ playbook_dir }}/reportes"
+        state: directory
+        mode: "0755"
+      delegate_to: localhost
+      run_once: true
+      when: guardar_reporte | bool
+
+    - name: Guardar reporte por host
+      ansible.builtin.copy:
+        dest: "{{ playbook_dir }}/reportes/{{ inventory_hostname }}_{{ now(fmt='%Y%m%d_%H%M%S') }}.log"
+        content: |
+          ===== {{ inventory_hostname }} ({{ ansible_host }}) =====
+          {% for cmd, out in comandos_comunes | zip(r_show.stdout) %}
+          ---- {{ cmd }} ----
+          {{ out }}
+
+          {% endfor %}
+          {% if es_spoke %}
+          {% for t in r_trace.results %}
+          ---- traceroute #{{ t.item }} -> {{ destino_ip }} ----
+          {{ t.stdout[0] }}
+
+          {% endfor %}
+          ---- ping 1400 -> {{ destino_ip }} ----
+          {{ r_ping.stdout[0] }}
+          {% endif %}
+        mode: "0644"
+      delegate_to: localhost
+      when: guardar_reporte | bool

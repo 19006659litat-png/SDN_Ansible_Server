@@ -1,0 +1,67 @@
+---
+- name: Borrar la configuarción de los Routers Cisco - BRANCHES -
+#  hosts: cisco_routers_branches
+  hosts: all
+  gather_facts: no
+
+  tasks:
+
+# -----------------------------------------------------------
+
+    - name: 01A. Turn off ipv6 unicast-routing.
+      cisco.ios.ios_config:
+        lines:
+          - hostname R{{ router_id }}
+      register: turn_off_ipv6_unicast_routing
+
+# -----------------------------------------------------------
+
+    - name: 01B. Turn off ipv6 unicast-routing.
+      cisco.ios.ios_config:
+        lines:
+          - no ipv6 unicast-routing
+      register: turn_off_ipv6_unicast_routing
+
+    - name: 02B. Turn off ipv6 unicast-routing result
+      debug:
+        msg: "ipv6 unicast-routing turned off"
+
+# -----------------------------------------------------------
+
+    - name: 01C. Router ospf 1 check
+      cisco.ios.ios_command:
+        commands:
+          - show running-config | include router ospf 1
+      register: check_router_ospf_1_v4
+      changed_when: false
+
+    - name: 02C. Clear router ospf 1
+      cisco.ios.ios_config:
+        lines:
+          - no router ospf 1
+      when: "'ospf' in check_router_ospf_1_v4.stdout[0]"
+      register: clear_router_ospf_1_v4
+
+    - name: 03C. Clear router ospf 1 result
+      debug:
+        msg: "router ospf 1 cleared or don't exist"
+
+# -----------------------------------------------------------
+
+    - name: 01D. Ipv6 ospf 1 check
+      cisco.ios.ios_command:
+        commands:
+          - show running-config | include ipv6 router ospf 1
+      register: check_router_ospf_1_v6
+      changed_when: false
+
+    - name: 02D. Clear ipv6 router ospf 1
+      cisco.ios.ios_config:
+        lines:
+          - no ipv6 router ospf 1
+      when: "'ospf' in check_router_ospf_1_v6.stdout[0]"
+      register: clear_router_ospf_1_v6
+
+    - name: 03D. Clear ipv6 ospf 1 result
+      debug:
+        msg: "ipv6 router ospf 1 cleared or don't exist"

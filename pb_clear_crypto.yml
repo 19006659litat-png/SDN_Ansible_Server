@@ -1,0 +1,170 @@
+---
+- name: Borrar la configuarción de los Routers Cisco - BRANCHES -
+#  hosts: cisco_routers_branches
+  hosts: all
+  gather_facts: no
+
+  tasks:
+
+# --------------------------------------------------------------------
+
+    - name: 01A. Crypto ikev2 proposal check_#1
+      cisco.ios.ios_command:
+        commands:
+          - show running-config | include ikev2 proposal
+      register: check_ikev2_proposal_1
+      changed_when: false
+
+    - name: 02A. Clear crypto ikev2 proposal
+      cisco.ios.ios_config:
+        lines:
+          - no crypto ikev2 proposal IKEV2_PROPOSAL_TUNNEL
+      when: "'IKEV2_PROPOSAL_TUNNEL' in check_ikev2_proposal_1.stdout[0]"
+      register: clear_ikev2_proposal
+
+    - name: 03A. Crypto ikev2 proposal check_#2
+      cisco.ios.ios_command:
+        commands:
+          - show running-config | include ikev2 proposal
+      register: check_ikev2_proposal_2
+      changed_when: false
+
+    - name: 04A. Crypto ikev2 proposal result
+      debug:
+        msg: "Previo {{ check_ikev2_proposal_1 }} :: Final {{ check_ikev2_proposal_2 }}"
+
+# --------------------------------------------------------------------
+
+    - name: 01B. Crypto ikev2 policy check_#1
+      cisco.ios.ios_command:
+        commands:
+          - show running-config | include ikev2 policy
+      register: check_ikev2_policy_1
+      changed_when: false
+
+    - name: 02B. Clear crypto ikev2 policy
+      cisco.ios.ios_config:
+        lines:
+          - no crypto ikev2 policy IKEV2_POLICY_TUNNEL
+      when: "'IKEV2_POLICY_TUNNEL' in check_ikev2_policy_1.stdout[0]"
+      register: clear_ikev2_policy
+
+    - name: 03B. Crypto ikev2 policy check_#2
+      cisco.ios.ios_command:
+        commands:
+          - show running-config | include ikev2 policy
+      register: check_ikev2_policy_2
+      changed_when: false
+
+    - name: 04B. Clear crypto ikev2 policy result
+      debug:
+        msg: "Previo {{ check_ikev2_policy_1 }} :: Final {{ check_ikev2_policy_2 }}"
+
+# --------------------------------------------------------------------
+
+    - name: 01C. crypto ipsec profile check_#1
+      cisco.ios.ios_command:
+        commands:
+          - show running-config | include IKEV2_IPSEC_PROFILE_TUNNEL
+      register: check_ipsec_profile_1
+      changed_when: false
+
+    - name: 02C. Clear crypto ipsec profile
+      cisco.ios.ios_config:
+        lines:
+          - no crypto ipsec profile IKEV2_IPSEC_PROFILE_TUNNEL
+      when: "'IKEV2_IPSEC_PROFILE_TUNNEL' in check_ipsec_profile_1.stdout[0]"
+      register: clear_ipsec_profile
+
+    - name: 03C. crypto ipsec profile check_#2
+      cisco.ios.ios_command:
+        commands:
+          - show running-config | include IKEV2_IPSEC_PROFILE_TUNNEL
+      register: check_ipsec_profile_2
+      changed_when: false
+
+    - name: 04C. Clear crypto ipsec profile result
+      debug:
+        msg: "Previo {{ check_ipsec_profile_1 }} :: Final {{ check_ipsec_profile_2 }}"
+
+# --------------------------------------------------------------------
+
+    - name: 01D. Crypto ikev2 profile check_1
+      cisco.ios.ios_command:
+        commands:
+          - show running-config | include ikev2 profile
+      register: check_ikev2_profile_1
+      changed_when: false
+
+    - name: 02D. Clear crypto ikev2 profile
+      cisco.ios.ios_config:
+        lines:
+          - no crypto ikev2 profile IKEV2_PROFILE_TUNNEL
+      when: "'IKEV2_PROFILE_TUNNEL' in check_ikev2_profile_1.stdout[0]"
+      register: clear_ikev2_profile
+
+    - name: 03D. Crypto ikev2 profile check_2
+      cisco.ios.ios_command:
+        commands:
+          - show running-config | include ikev2 profile
+      register: check_ikev2_profile_2
+      changed_when: false
+
+    - name: 04D. Crypto ikev2 profile result
+      debug:
+        msg: "Previo {{ check_ikev2_profile_1 }} :: Final {{ check_ikev2_profile_2 }}"
+
+# --------------------------------------------------------------------
+
+    - name: 01E. crypto ipsec transform-set check_#1
+      cisco.ios.ios_command:
+        commands:
+          - show running-config | include ipsec transform-set
+      register: check_ipsec_transform_set_1
+      changed_when: false
+
+    - name: 02E. Clear crypto ipsec transform-set
+      cisco.ios.ios_config:
+        lines:
+          - no crypto ipsec transform-set ESP-AES256-SHA256
+      when: "'ESP-AES256-SHA256' in check_ipsec_transform_set_1.stdout[0]"
+      register: clear_ipsec_transform_set
+
+    - name: 03E. crypto ipsec transform-set check_#2
+      cisco.ios.ios_command:
+        commands:
+          - show running-config | include ipsec transform-set
+      register: check_ipsec_transform_set_2
+      changed_when: false
+
+    - name: 04E. Clear crypto ipsec transform-set result
+      debug:
+        msg: "Previo {{ check_ipsec_transform_set_1 }} :: Final {{ check_ipsec_transform_set_2 }}"
+
+
+# --------------------------------------------------------------------
+
+    - name: 01F. Crypto ikev2 keyring check_#1
+      cisco.ios.ios_command:
+        commands:
+          - show running-config | include ikev2 keyring
+      register: check_ikev2_keyring_1
+      changed_when: false
+
+    - name: 02F. Clear crypto ikev2 keyring
+      cisco.ios.ios_config:
+        lines:
+          - no crypto ikev2 keyring KEYPASS_TUNNEL
+      when: "'KEYPASS_TUNNEL' in check_ikev2_keyring_1.stdout[0]"
+      register: clear_ikev2_keyring
+
+    - name: 03F. Crypto ikev2 keyring check_#2
+      cisco.ios.ios_command:
+        commands:
+          - show running-config | include ikev2 keyring
+      register: check_ikev2_keyring_2
+      changed_when: false
+
+    - name: 04F. Crypto ikev2 keyring result
+      debug:
+        msg: "Previo {{ check_ikev2_keyring_1 }} :: Final {{ check_ikev2_keyring_2 }}"

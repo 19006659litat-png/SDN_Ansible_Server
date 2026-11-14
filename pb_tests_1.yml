@@ -1,0 +1,145 @@
+---
+- name: Pruebas sobre equipos cisco - BRANCHES -
+  hosts: cisco_routers_branches
+  gather_facts: no
+
+  tasks:
+
+    - name: T.1t. Security Associations (at least 2, per hub)
+      cisco.ios.ios_command:
+        commands:
+          - enable
+          - show crypto ikev2 sa
+      register: security_associations
+      changed_when: false
+
+    - name: T.1r. Security Associations result
+      debug:
+        msg: "SECURITY ASSOCIATIONS: {{ inventory_hostname }}: {{ security_associations.stdout[0] }} "
+
+    - name: T.2t. DMVPN test (at least 2 neighbors UP)
+      cisco.ios.ios_command:
+        commands:
+          - enable
+          - show dmvpn
+      register: dmvpn_output
+      changed_when: false
+
+    - name: T.2r. DMVPN result
+      debug:
+        msg: "DMVPN: {{ inventory_hostname }}: {{ dmvpn_output.stdout[0] }} "
+
+    - name: T.3t. OSPF IPv4 test
+      cisco.ios.ios_command:
+        commands:
+          - enable
+          - show ip ospf neighbor
+      register: ospf_neighbor_ipv4_output
+      changed_when: false
+
+    - name: T.3r. OSPF IPv4 result
+      debug:
+        msg: "OSPF IPv4: {{ inventory_hostname }}: {{ ospf_neighbor_ipv4_output.stdout[0] }} "
+
+    - name: T.4t. OSPF IPv6 test
+      cisco.ios.ios_command:
+        commands:
+          - enable
+          - show ipv6 ospf neighbor
+      register: ospf_neighbor_ipv6_output
+      changed_when: false
+
+    - name: T.4r. OSPF IPv6 result
+      debug:
+        msg: "OSPFv3: {{ inventory_hostname }}: {{ ospf_neighbor_ipv6_output.stdout[0] }} "
+
+    - name: T.5t. SPOKE to SPOKE ping IPv4 test
+      cisco.ios.ios_command:
+        commands:
+          - enable
+          - ping 10.0.11.10 source e0/1
+          - ping 10.0.12.10 source e0/1
+          - ping 10.0.13.10 source e0/1
+          - ping 10.0.14.10 source e0/1
+      register: ping_ipv4_output
+      changed_when: false
+
+    - name: T.5r. SPOKE to SPOKE ping IPv4 result
+      debug:
+        msg: "SPOKE to SPOKE ping IPv4: {{ inventory_hostname }}: {{ ping_ipv4_output.stdout[0] }} "
+
+    - name: T.5t. SPOKE to SPOKE ping IPv6 test
+      cisco.ios.ios_command:
+        commands:
+          - enable
+          - ping ipv6 2001:508:1220:3::10 source e0/1
+          - ping ipv6 2001:508:1220:4::10 source e0/1
+          - ping ipv6 2001:508:1220:5::10 source e0/1
+          - ping ipv6 2001:508:1220:6::10 source e0/1
+      register: ping_ipv6_output
+      changed_when: false
+
+    - name: T.5r. SPOKE to SPOKE ping IPv6 result
+      debug:
+        msg: "SPOKE to SPOKE ping IPv6: {{ inventory_hostname }}: {{ ping_ipv6_output.stdout[0] }} "
+
+    - name: T.6t. SPOKE to SPOKE traceroute_#1 IPv4 test
+      cisco.ios.ios_command:
+        commands:
+          - enable
+          - traceroute 10.0.11.10 numeric source e0/1
+          - traceroute 10.0.12.10 numeric source e0/1
+          - traceroute 10.0.13.10 numeric source e0/1
+          - traceroute 10.0.14.10 numeric source e0/1
+      register: traceroute_ipv4_1_output
+      changed_when: false
+
+    - name: T.6r. SPOKE to SPOKE traceroute_#1 IPv6 result
+      debug:
+        msg: "Traceroute_#1 IPv4: {{ inventory_hostname }}: {{ traceroute_ipv4_1_output.stdout[0] }} "
+
+    - name: T.7t. SPOKE to SPOKE traceroute_#2 IPv4 test
+      cisco.ios.ios_command:
+        commands:
+          - enable
+          - traceroute 10.0.11.10 numeric source e0/1
+          - traceroute 10.0.12.10 numeric source e0/1
+          - traceroute 10.0.13.10 numeric source e0/1
+          - traceroute 10.0.14.10 numeric source e0/1
+      register: traceroute_ipv4_2_output
+      changed_when: false
+
+    - name: T.7r. SPOKE to SPOKE traceroute_#2 IPv4 result
+      debug:
+        msg: "Traceroute_#2 IPv4: {{ inventory_hostname }}: {{ traceroute_ipv4_2_output.stdout[0] }} "
+
+    - name: T.8t. SPOKE to SPOKE traceroute_#1 IPv6 test
+      cisco.ios.ios_command:
+        commands:
+          - enable
+          - traceroute ipv6 2001:508:1220:3::10
+          - traceroute ipv6 2001:508:1220:4::10
+          - traceroute ipv6 2001:508:1220:5::10
+          - traceroute ipv6 2001:508:1220:6::10
+      register: traceroute_ipv6_1_output
+      changed_when: false
+
+    - name: T.8r. SPOKE to SPOKE traceroute_#1 IPv6 result
+      debug:
+        msg: "Traceroute_#1 IPv6: {{ inventory_hostname }}: {{ traceroute_ipv6_1_output.stdout[0] }} "
+
+    - name: T.7t. SPOKE to SPOKE traceroute_#2 IPv6 test
+      cisco.ios.ios_command:
+        commands:
+          - enable
+          - traceroute ipv6 2001:508:1220:3::10
+          - traceroute ipv6 2001:508:1220:4::10
+          - traceroute ipv6 2001:508:1220:5::10
+          - traceroute ipv6 2001:508:1220:6::10
+      register: traceroute_ipv6_2_output
+      changed_when: false
+
+    - name: T.7r. SPOKE to SPOKE traceroute_#2 IPv6 result
+      debug:
+        msg: "Traceroute_#2 IPv6: {{ inventory_hostname }}: {{ traceroute_ipv6_2_output.stdout[0] }} "
+

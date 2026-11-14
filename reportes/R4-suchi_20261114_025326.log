@@ -1,0 +1,177 @@
+===== R4-suchi (192.168.0.104) =====
+---- show crypto ikev2 sa ----
+IPv4 Crypto IKEv2  SA 
+
+Tunnel-id Local                 Remote                fvrf/ivrf            Status 
+4         192.168.0.104/500     192.168.0.106/500     none/none            READY  
+      Encr: AES-CBC, keysize: 256, PRF: SHA256, Hash: SHA256, DH Grp:14, Auth sign: PSK, Auth verify: PSK
+      Life/Active Time: 86400/51 sec
+
+Tunnel-id Local                 Remote                fvrf/ivrf            Status 
+2         192.168.0.104/500     192.168.0.102/500     none/none            READY  
+      Encr: AES-CBC, keysize: 256, PRF: SHA256, Hash: SHA256, DH Grp:14, Auth sign: PSK, Auth verify: PSK
+      Life/Active Time: 86400/18338 sec
+
+Tunnel-id Local                 Remote                fvrf/ivrf            Status 
+1         192.168.0.104/500     192.168.0.101/500     none/none            READY  
+      Encr: AES-CBC, keysize: 256, PRF: SHA256, Hash: SHA256, DH Grp:14, Auth sign: PSK, Auth verify: PSK
+      Life/Active Time: 86400/18338 sec
+
+ IPv6 Crypto IKEv2  SA
+
+---- show dmvpn ----
+Legend: Attrb --> S - Static, D - Dynamic, I - Incomplete
+	N - NATed, L - Local, X - No Socket
+	T1 - Route Installed, T2 - Nexthop-override
+	C - CTS Capable, I2 - Temporary
+	# Ent --> Number of NHRP entries with same NBMA peer
+	NHS Status: E --> Expecting Replies, R --> Responding, W --> Waiting
+	UpDn Time --> Up or Down Time for a Tunnel
+==========================================================================
+
+Interface: Tunnel4, IPv4 NHRP Details 
+Type:Spoke, NHRP Peers:3, 
+
+ # Ent  Peer NBMA Addr Peer Tunnel Add State  UpDn Tm Attrb
+ ----- --------------- --------------- ----- -------- -----
+     2 192.168.0.106        10.12.20.6    UP 00:00:51     D
+                            10.12.20.6    UP 00:00:51   DT1
+     1 192.168.0.101        10.12.20.1    UP 05:05:38     S
+     1 192.168.0.102        10.12.20.2    UP 05:05:38     S
+
+Interface: Tunnel4, IPv6 NHRP Details 
+Type:Spoke, Total NBMA Peers (v4/v6): 2
+    1.Peer NBMA Address: 192.168.0.101
+	Tunnel IPv6 Address: 2001:1220:508::1
+	IPv6 Target Network: 2001:1220:508::1/128
+	# Ent: 1, Status: UP, UpDn Time: 05:05:38, Cache Attrib: S
+    2.Peer NBMA Address: 192.168.0.102
+	Tunnel IPv6 Address: 2001:1220:508::2
+	IPv6 Target Network: 2001:1220:508::2/128
+	# Ent: 1, Status: UP, UpDn Time: 05:05:38, Cache Attrib: S
+
+---- show interfaces description ----
+Interface                      Status         Protocol Description
+Et0/0                          up             up       gateway
+Et0/1                          up             up       to_LAN_site_04_in_Suchi
+Et0/2                          admin down     down     
+Et0/3                          admin down     down     
+Lo0                            up             up       
+Tu4                            up             up
+
+---- show ip interface brief ----
+Interface                  IP-Address      OK? Method Status                Protocol
+Ethernet0/0                192.168.0.104   YES NVRAM  up                    up      
+Ethernet0/1                10.0.12.1       YES manual up                    up      
+Ethernet0/2                unassigned      YES NVRAM  administratively down down    
+Ethernet0/3                unassigned      YES NVRAM  administratively down down    
+Loopback0                  10.254.0.4      YES manual up                    up      
+Tunnel4                    10.12.20.4      YES manual up                    up
+
+---- show ospfv3 neighbor ----
+OSPFv3 1 address-family ipv4 (router-id 10.254.0.4)
+
+Neighbor ID     Pri   State           Dead Time   Interface ID    Interface
+10.254.0.1      255   FULL/BDR        00:00:10    11              Tunnel4
+10.254.0.2      254   FULL/DR         00:00:11    11              Tunnel4
+
+          OSPFv3 1 address-family ipv6 (router-id 10.254.0.4)
+
+Neighbor ID     Pri   State           Dead Time   Interface ID    Interface
+10.254.0.1      255   FULL/BDR        00:00:09    11              Tunnel4
+10.254.0.2      254   FULL/DR         00:00:10    11              Tunnel4
+
+---- show ip route ospfv3 ----
+Codes: L - local, C - connected, S - static, R - RIP, M - mobile, B - BGP
+       D - EIGRP, EX - EIGRP external, O - OSPF, IA - OSPF inter area 
+       N1 - OSPF NSSA external type 1, N2 - OSPF NSSA external type 2
+       E1 - OSPF external type 1, E2 - OSPF external type 2
+       i - IS-IS, su - IS-IS summary, L1 - IS-IS level-1, L2 - IS-IS level-2
+       ia - IS-IS inter area, * - candidate default, U - per-user static route
+       o - ODR, P - periodic downloaded static route, H - NHRP, l - LISP
+       a - application route
+       + - replicated route, % - next hop override, p - overrides from PfR
+
+Gateway of last resort is not set
+
+      10.0.0.0/8 is variably subnetted, 16 subnets, 2 masks
+O        10.0.11.0/24 [110/110] via 10.12.20.3, 05:00:56, Tunnel4
+O        10.0.13.0/24 [110/110] via 10.12.20.5, 05:00:16, Tunnel4
+O        10.0.14.0/24 [110/110] via 10.12.20.6, 05:05:30, Tunnel4
+O        10.0.15.0/24 [110/110] via 10.12.20.7, 05:05:30, Tunnel4
+O        10.254.0.1/32 [110/100] via 10.12.20.1, 05:05:30, Tunnel4
+O        10.254.0.2/32 [110/100] via 10.12.20.2, 05:05:30, Tunnel4
+O        10.254.0.3/32 [110/100] via 10.12.20.3, 05:00:56, Tunnel4
+O        10.254.0.5/32 [110/100] via 10.12.20.5, 05:00:16, Tunnel4
+O        10.254.0.6/32 [110/100] via 10.12.20.6, 05:05:30, Tunnel4
+O        10.254.0.7/32 [110/100] via 10.12.20.7, 05:05:30, Tunnel4
+
+---- show ipv6 interface brief ----
+Ethernet0/0            [up/up]
+    unassigned
+Ethernet0/1            [up/up]
+    FE80::A8BB:CCFF:FE00:4010
+    2001:508:1220:4::1
+Ethernet0/2            [administratively down/down]
+    unassigned
+Ethernet0/3            [administratively down/down]
+    unassigned
+Loopback0              [up/up]
+    FE80::A8BB:CCFF:FE00:4000
+    2001:1220:508:254::4
+Tunnel4                [up/up]
+    FE80::4
+    2001:1220:508::4
+
+---- show ipv6 route ospf ----
+IPv6 Routing Table - default - 16 entries
+Codes: C - Connected, L - Local, S - Static, U - Per-user Static route
+       B - BGP, HA - Home Agent, MR - Mobile Router, R - RIP
+       H - NHRP, I1 - ISIS L1, I2 - ISIS L2, IA - ISIS interarea
+       IS - ISIS summary, D - EIGRP, EX - EIGRP external, NM - NEMO
+       ND - ND Default, NDp - ND Prefix, DCE - Destination, NDr - Redirect
+       RL - RPL, O - OSPF Intra, OI - OSPF Inter, OE1 - OSPF ext 1
+       OE2 - OSPF ext 2, ON1 - OSPF NSSA ext 1, ON2 - OSPF NSSA ext 2
+       la - LISP alt, lr - LISP site-registrations, ld - LISP dyn-eid
+       lA - LISP away, a - Application
+O   2001:508:1220:3::/64 [110/110]
+     via FE80::3, Tunnel4
+O   2001:508:1220:5::/64 [110/110]
+     via FE80::5, Tunnel4
+O   2001:508:1220:6::/64 [110/110]
+     via FE80::6, Tunnel4
+O   2001:508:1220:7::/64 [110/110]
+     via FE80::7, Tunnel4
+O   2001:1220:508:254::1/128 [110/100]
+     via FE80::1, Tunnel4
+O   2001:1220:508:254::2/128 [110/100]
+     via FE80::2, Tunnel4
+O   2001:1220:508:254::3/128 [110/100]
+     via FE80::3, Tunnel4
+O   2001:1220:508:254::5/128 [110/100]
+     via FE80::5, Tunnel4
+O   2001:1220:508:254::6/128 [110/100]
+     via FE80::6, Tunnel4
+O   2001:1220:508:254::7/128 [110/100]
+     via FE80::7, Tunnel4
+
+---- traceroute No. 1 -> 10.0.14.10 ----
+Type escape sequence to abort.
+Tracing the route to 10.0.14.10
+VRF info: (vrf in name/id, vrf out name/id)
+  1 10.12.20.6 2 msec 1 msec 1 msec
+  2 10.0.14.10 1 msec 1 msec 1 msec
+
+---- traceroute No. 2 -> 10.0.14.10 ----
+Type escape sequence to abort.
+Tracing the route to 10.0.14.10
+VRF info: (vrf in name/id, vrf out name/id)
+  1 10.12.20.6 1 msec 1 msec 1 msec
+  2 10.0.14.10 1 msec 1 msec 1 msec
+
+---- ping 1400 -> 10.0.14.10 ----
+Type escape sequence to abort.
+Sending 5, 1400-byte ICMP Echos to 10.0.14.10, timeout is 2 seconds:
+Packet sent with a source address of 10.0.12.1 
+!!!!!
+Success rate is 100 percent (5/5), round-trip min/avg/max = 1/1/2 ms

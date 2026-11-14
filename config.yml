@@ -1,0 +1,10 @@
+---
+- name: Configuración IPSEC IKEV2
+  import_playbook: /home/peet/proyecto-sdn/pb_config_crypto.yml
+
+- name: Configuración IFACES
+  import_playbook: /home/peet/proyecto-sdn/pb_config_ifaces.yml
+
+- name: Configuración OSPF
+  import_playbook: /home/peet/proyecto-sdn/pb_config_ospf.yml
+

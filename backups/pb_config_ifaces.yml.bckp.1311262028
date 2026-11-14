@@ -1,0 +1,94 @@
+---
+- name: Configuracion de interfaces en Routers Cisco - BRANCHES -
+#  hosts: cisco_routers_branches
+  hosts: all
+  gather_facts: no
+
+  tasks:
+
+    - name: IPv6 global
+      cisco.ios.ios_config:
+        lines:
+          - ipv6 unicast-routing
+      register: ipv6_unicast_routing_result
+
+    - name: if Loopback0 config
+      cisco.ios.ios_config:
+        parents: "interface Loopback0"
+        lines:
+          - ip address 10.254.0.{{ router_id }} 255.255.255.255
+          - ipv6 address 2001:1220:508:254::{{ router_id }}/128
+          - ipv6 ospf 1 area 0
+      register: config_if_lo_0_result
+
+    - name: Loopback 0 result
+      debug:
+        msg: "{{ inventory_hostname }} IF Lo0:\r\nIPv4: 10.254.0.{{ router_id }}/32\r\nIPv6: 2001:1220:508:254::{{ router_id }}/128"
+
+    - name: if Eth0/1 config
+      cisco.ios.ios_config:
+        parents: "interface Ethernet0/1"
+        lines:
+          - description to_LAN_site_0{{ router_id }}_in_{{ site_name }}
+          - ip address 10.0.{{ lan_site_id }}.1 255.255.255.0
+          - ipv6 address 2001:508:1220:{{ router_id }}::1/64
+          - ipv6 ospf 1 area 0
+          - no shutdown
+      register: config_if_ether_0_1_result
+
+    - name: Eth0/1 result
+      debug:
+        msg: "{{ inventory_hostname }} IF Eth0/1:\r\nIPv4: 10.0.{{ lan_site_id }}.1/24\r\nIPv6: 2001:508:{{ router_id }}::1/64"
+
+    - name: if Tunnel {{ router_id }} config
+      cisco.ios.ios_config:
+        parents: "interface Tunnel{{ router_id }}"
+        lines:
+          - bandwidth 1000
+          - delay 1000
+          - ip address 10.12.20.{{ router_id }} 255.255.255.0
+          - no ip redirects
+          - ip mtu 1400
+          - ip tcp adjust-mss 1360
+          - ip nhrp network-id 100000
+          - ip nhrp holdtime 300
+          - ip nhrp map 10.12.20.1 192.168.0.101
+          - ip nhrp map multicast 192.168.0.101
+          - ip nhrp map 10.12.20.2 192.168.0.102
+          - ip nhrp map multicast 192.168.0.102
+          - ip nhrp nhs 10.12.20.1
+          - ip nhrp nhs 10.12.20.2
+          - ip nhrp shortcut
+          - ip ospf network broadcast
+          - ip ospf priority 0
+          - ip ospf hello-interval 3
+          - ip ospf dead-interval 12
+          - ipv6 address FE80::{{ router_id }} link-local
+          - ipv6 address 2001:1220:508::{{ router_id }}/64
+          - ipv6 mtu 1400
+          - ipv6 nhrp network-id 100000
+          - ipv6 nhrp holdtime 300
+          - ipv6 nhrp map 2001:1220:508::1/128 192.168.0.101
+          - ipv6 nhrp map FE80::1/128 192.168.0.101
+          - ipv6 nhrp map multicast 192.168.0.101
+          - ipv6 nhrp map 2001:1220:508::2/128 192.168.0.102
+          - ipv6 nhrp map FE80::2/128 192.168.0.102
+          - ipv6 nhrp map multicast 192.168.0.102
+          - ipv6 nhrp nhs 2001:1220:508::1
+          - ipv6 nhrp nhs 2001:1220:508::2
+          - ipv6 nhrp shortcut
+          - ipv6 ospf 1 area 0
+          - ipv6 ospf network broadcast
+          - ipv6 ospf priority 0
+          - ipv6 ospf hello-interval 3
+          - ipv6 ospf dead-interval 12
+          - tunnel source Ethernet0/0
+          - tunnel mode gre multipoint
+          - tunnel key 100000
+          - tunnel protection ipsec profile IKEV2_IPSEC_PROFILE_TUNNEL
+          - no shutdown
+      register: config_if_tunn__result
+
+    - name: iface Tunnel {{ router_id }} result
+      debug:
+        msg: "{{ inventory_hostname }} IF Tunnel{{ router_id }}:\r\nIPv4: 10.12.20.{{ router_id }}/24\r\nIPv6: 2001:1220:508::{{ router_id }}/64"

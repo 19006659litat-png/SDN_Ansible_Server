@@ -1,0 +1,75 @@
+---
+- name: IKEv2 para los tuneles en Routers Cisco - BRANCHES -
+#  hosts: cisco_routers_branches
+  hosts: all
+  gather_facts: no
+
+  tasks:
+
+    - name: set hostname
+      cisco.ios.ios_config:
+        parents: "crypto ikev2 proposal IKEV2_PROPOSAL_TUNNEL"
+        lines:
+          - hostname R{{ router_id }}-{{ site_name }}
+      register: config_hostname
+
+    - name: no service config no boot network
+      cisco.ios.ios_config:
+        parents: "crypto ikev2 proposal IKEV2_PROPOSAL_TUNNEL"
+        lines:
+          - no service config
+          - no boot network
+      register: config_no_service_config_no_boot_network_result
+
+
+    - name: IKEv2 Proposal
+      cisco.ios.ios_config:
+        parents: "crypto ikev2 proposal IKEV2_PROPOSAL_TUNNEL"
+        lines:
+          - encryption aes-cbc-256
+          - integrity sha256
+          - group 14
+      register: config_ikev2_proposal_result
+
+    - name: IKEv2 Policy
+      cisco.ios.ios_config:
+        parents: "crypto ikev2 policy IKEV2_POLICY_TUNNEL"
+        lines:
+          - proposal IKEV2_PROPOSAL_TUNNEL
+      register: config_ikev2_policy_result
+
+    - name: IKEv2 Keyring
+      cisco.ios.ios_config:
+        parents:
+          - "crypto ikev2 keyring KEYPASS_TUNNEL"
+          - "peer ANY_NODE_TUNNEL"
+        lines:
+          - address 0.0.0.0 0.0.0.0
+          - pre-shared-key sdnprcfisicc
+      register: config_ikev2_kering_result
+
+    - name: IKEv2 Profile
+      cisco.ios.ios_config:
+        parents: "crypto ikev2 profile IKEV2_PROFILE_TUNNEL"
+        lines:
+          - match identity remote address 0.0.0.0 0.0.0.0
+          - authentication remote pre-share
+          - authentication local pre-share
+          - keyring local KEYPASS_TUNNEL
+          - dpd 10 2 periodic
+      register: config_ikev2_profile_result
+
+    - name: IPsec Transform-Set
+      cisco.ios.ios_config:
+        parents: "crypto ipsec transform-set ESP-AES256-SHA256 esp-aes 256 esp-sha256-hmac"
+        lines:
+          - mode transport
+      register: config_ipsec_transform_set_result
+
+    - name: IKEv2 Profile _to_ IPsec Profile
+      cisco.ios.ios_config:
+        parents: "crypto ipsec profile IKEV2_IPSEC_PROFILE_TUNNEL"
+        lines:
+          - set transform-set ESP-AES256-SHA256
+          - set ikev2-profile IKEV2_PROFILE_TUNNEL
+      register: config_ipsec_profile_result

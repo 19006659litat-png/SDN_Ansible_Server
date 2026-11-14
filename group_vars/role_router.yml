@@ -1,0 +1,14 @@
+---
+ansible_connection: network_cli
+ansible_network_os: cisco.ios.ios
+ansible_user: netadmin
+ansible_password: "cisco"
+
+
+# ---
+# ansible_connection: network_cli
+# ansible_network_os: cisco.ios.ios
+# ansible_user: tu_usuario_ssh
+# ansible_password: tu_contraseña_segura
+# O si usas llave privada:
+# ansible_ssh_private_key_file: ~/.ssh/id_rsa

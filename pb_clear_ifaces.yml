@@ -1,0 +1,62 @@
+---
+- name: Borrar la configuarción de los Routers Cisco - BRANCHES -
+#  hosts: cisco_routers_branches
+  hosts: all
+  gather_facts: no
+
+  tasks:
+
+# -----------------------------------------------------------
+
+    - name: 01B. Set Eth0/1 default config.
+      cisco.ios.ios_config:
+        lines:
+          - default interface ethernet 0/1
+          - interface ethernet 0/1
+          - shutdown
+      register: if_eth0_1_default_config
+
+    - name: 02B. Set Eth0/1 default config result
+      debug:
+        msg: "iface Eth0/1 set to default"
+
+# -----------------------------------------------------------
+
+    - name: 01C. Iface Loopback0 check
+      cisco.ios.ios_command:
+        commands:
+          - show running-config | include Loopback0
+      register: check_loopback_0
+      changed_when: false
+
+    - name: 02C. Delete iface Loopback0
+      cisco.ios.ios_config:
+        lines:
+          - no interface Loopback0
+      when: "'Loopback0' in check_loopback_0.stdout[0]"
+      register: delete_iface_loopback_0
+
+    - name: 03C. Delete iface Loopback0 result
+      debug:
+        msg: "iface Loopback0 deleted or don't exist"
+
+# -----------------------------------------------------------
+
+    - name: 01D. Iface Tunnel{{ router_id }} check
+      cisco.ios.ios_command:
+        commands:
+          - show running-config | include Tunnel{{ router_id }}
+      register: check_iface_tunnel
+      changed_when: false
+
+    - name: 02D. Delete iface Tunnel{{ router_id }}
+      cisco.ios.ios_config:
+        lines:
+          - no interface Tunnel{{ router_id }}
+      when: "'Tunnel{{ router_id }}' in check_iface_tunnel.stdout[0]"
+      register: delete_iface_tunnel
+
+    - name: 03D. delete iface Tunnel{{ router_id }} result
+      debug:
+        msg: "iface 'Tunnel{{ router_id }}' deleted or don't exist"
+

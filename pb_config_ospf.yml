@@ -1,0 +1,55 @@
+---
+- name: Configuracion de la seguridad en los túneles y ospf en Routers Cisco - BRANCHES -
+#  hosts: cisco_routers_branches
+  hosts: all
+  gather_facts: no
+
+  tasks:
+
+    - name: Router OSPFv3 1 config
+      cisco.ios.ios_config:
+        parents: "router ospfv3 1"
+        lines:
+          - router-id 10.254.0.{{ router_id }}
+          - passive-interface default
+      register: ospfv3_config
+
+    - name: OSPFv3 in Loopback0
+      cisco.ios.ios_config:
+        parents: "interface Loopback0"
+        lines:
+          - ospfv3 1 ipv6 area 0
+          - ospfv3 1 ipv4 area 0
+      register: ospfv3_loop0_result
+
+    - name: OSPFv3 in Tunnel{{ router_id }}
+      cisco.ios.ios_config:
+        parents: "interface Tunnel{{ router_id }}"
+        lines:
+          - ospfv3 1 ipv6 area 0
+          - ospfv3 1 ipv6 network broadcast
+          - ospfv3 1 ipv6 hello-interval 3
+          - ospfv3 1 ipv6 dead-interval 12
+          - ospfv3 1 ipv6 priority 0
+          - ospfv3 1 ipv4 area 0
+          - ospfv3 1 ipv4 network broadcast
+          - ospfv3 1 ipv4 hello-interval 3
+          - ospfv3 1 ipv4 dead-interval 12
+          - ospfv3 1 ipv4 priority 0
+      register: ospfv3_loop0_result
+
+    - name: OSPFv3 in Ethernet0/1
+      cisco.ios.ios_config:
+        parents: "interface Ethernet0/1"
+        lines:
+          - ospfv3 1 ipv6 area 0
+          - ospfv3 1 ipv4 area 0
+      register: ospfv3_loop0_result
+
+    - name: Router OSPFv3 1 config
+      cisco.ios.ios_config:
+        parents: "router ospfv3 1"
+        lines:
+          - no passive-interface Loopback0
+          - no passive-interface Tunnel{{ router_id }}
+      register: ospfv3_config

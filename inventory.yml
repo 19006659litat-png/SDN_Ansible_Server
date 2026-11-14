@@ -1,0 +1,41 @@
+all:
+  children:
+    cisco_routers_hq:
+      hosts:
+        R1-HQ:
+          ansible_host: 192.168.0.101
+          router_id: 1
+        R2-HQ:
+          ansible_host: 192.168.0.102
+          router_id: 2
+    cisco_routers_branches:
+      hosts:
+        R5-zacapa:
+          ansible_host: 192.168.0.105
+          router_id: 5
+          lan_site_id: 15
+          lan_pc_dsc: "PC-05_in_zacapa"
+          site_name: "zacapa"
+        R6-reu:
+          ansible_host: 192.168.0.106
+          router_id: 6
+          lan_site_id: 16
+          lan_pc_dsc: "PC-06_in_reu"
+          site_name: "reu"
+        R3-mazate:
+          ansible_host: 192.168.0.103
+          router_id: 3
+          lan_site_id: 13
+          lan_pc_dsc: "PC-03_in_mazate"
+          site_name: "mazate"
+        R4-suchi:
+          ansible_host: 192.168.0.104
+          router_id: 4
+          lan_site_id: 14
+          lan_pc_dsc: "PC-04_in_suchi"
+          site_name: "suchi"
+  vars:
+    ansible_connection: network_cli
+    ansible_network_os: cisco.ios.ios
+    ansible_user: netadmin
+    ansible_password: cisco

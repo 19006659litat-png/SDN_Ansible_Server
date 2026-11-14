@@ -1,0 +1,9 @@
+#!/bin/bash
+PLAYBOOK=$1
+LIMIT=$2
+
+# Cargar explícitamente el PATH del usuario peet
+export PATH="$HOME/.local/bin:$PATH"
+
+# Ejecutar ansible con la ruta correcta
+/home/peet/.local/bin/ansible-playbook -i inventory.yml "$PLAYBOOK" --limit "$LIMIT"

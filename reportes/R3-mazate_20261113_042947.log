@@ -1,0 +1,108 @@
+===== R3-mazate (192.168.0.103) =====
+---- show crypto ikev2 sa ----
+IPv4 Crypto IKEv2  SA 
+
+Tunnel-id Local                 Remote                fvrf/ivrf            Status 
+2         192.168.0.103/500     192.168.0.102/500     none/none            READY  
+      Encr: AES-CBC, keysize: 256, PRF: SHA256, Hash: SHA256, DH Grp:14, Auth sign: PSK, Auth verify: PSK
+      Life/Active Time: 86400/9613 sec
+
+Tunnel-id Local                 Remote                fvrf/ivrf            Status 
+1         192.168.0.103/500     192.168.0.101/500     none/none            READY  
+      Encr: AES-CBC, keysize: 256, PRF: SHA256, Hash: SHA256, DH Grp:14, Auth sign: PSK, Auth verify: PSK
+      Life/Active Time: 86400/9613 sec
+
+ IPv6 Crypto IKEv2  SA
+
+---- show dmvpn ----
+Legend: Attrb --> S - Static, D - Dynamic, I - Incomplete
+	N - NATed, L - Local, X - No Socket
+	T1 - Route Installed, T2 - Nexthop-override
+	C - CTS Capable, I2 - Temporary
+	# Ent --> Number of NHRP entries with same NBMA peer
+	NHS Status: E --> Expecting Replies, R --> Responding, W --> Waiting
+	UpDn Time --> Up or Down Time for a Tunnel
+==========================================================================
+
+Interface: Tunnel3, IPv4 NHRP Details 
+Type:Spoke, NHRP Peers:2, 
+
+ # Ent  Peer NBMA Addr Peer Tunnel Add State  UpDn Tm Attrb
+ ----- --------------- --------------- ----- -------- -----
+     1 192.168.0.101        10.12.20.1    UP 02:40:13     S
+     1 192.168.0.102        10.12.20.2    UP 02:40:13     S
+
+Interface: Tunnel3, IPv6 NHRP Details 
+Type:Spoke, Total NBMA Peers (v4/v6): 2
+    1.Peer NBMA Address: 192.168.0.101
+	Tunnel IPv6 Address: 2001:1220:508::1
+	IPv6 Target Network: 2001:1220:508::1/128
+	# Ent: 1, Status: UP, UpDn Time: 02:40:13, Cache Attrib: S
+    2.Peer NBMA Address: 192.168.0.102
+	Tunnel IPv6 Address: 2001:1220:508::2
+	IPv6 Target Network: 2001:1220:508::2/128
+	# Ent: 1, Status: UP, UpDn Time: 02:40:13, Cache Attrib: S
+
+---- show ip interface brief ----
+Interface                  IP-Address      OK? Method Status                Protocol
+Ethernet0/0                192.168.0.103   YES NVRAM  up                    up      
+Ethernet0/1                10.0.11.1       YES manual up                    up      
+Ethernet0/2                unassigned      YES NVRAM  administratively down down    
+Ethernet0/3                unassigned      YES NVRAM  administratively down down    
+Loopback0                  10.254.0.3      YES manual up                    up      
+Tunnel3                    10.12.20.3      YES manual up                    up
+
+---- show interfaces description ----
+Interface                      Status         Protocol Description
+Et0/0                          up             up       gateway
+Et0/1                          up             up       to_LAN_site_03_in_Mazate
+Et0/2                          admin down     down     
+Et0/3                          admin down     down     
+Lo0                            up             up       
+Tu3                            up             up
+
+---- show ip ospf neighbor ----
+Neighbor ID     Pri   State           Dead Time   Address         Interface
+10.254.0.1      255   FULL/DR         00:00:11    10.12.20.1      Tunnel3
+10.254.0.2      254   FULL/BDR        00:00:10    10.12.20.2      Tunnel3
+
+---- show ip route ospf ----
+Codes: L - local, C - connected, S - static, R - RIP, M - mobile, B - BGP
+       D - EIGRP, EX - EIGRP external, O - OSPF, IA - OSPF inter area 
+       N1 - OSPF NSSA external type 1, N2 - OSPF NSSA external type 2
+       E1 - OSPF external type 1, E2 - OSPF external type 2
+       i - IS-IS, su - IS-IS summary, L1 - IS-IS level-1, L2 - IS-IS level-2
+       ia - IS-IS inter area, * - candidate default, U - per-user static route
+       o - ODR, P - periodic downloaded static route, H - NHRP, l - LISP
+       a - application route
+       + - replicated route, % - next hop override, p - overrides from PfR
+
+Gateway of last resort is not set
+
+      10.0.0.0/8 is variably subnetted, 9 subnets, 2 masks
+O        10.0.12.0/24 [110/110] via 10.12.20.4, 00:27:17, Tunnel3
+O        10.254.0.1/32 [110/101] via 10.12.20.1, 02:40:06, Tunnel3
+O        10.254.0.2/32 [110/101] via 10.12.20.2, 02:40:06, Tunnel3
+O        10.254.0.4/32 [110/101] via 10.12.20.4, 00:27:17, Tunnel3
+
+---- traceroute #1 -> 10.0.12.10 ----
+Type escape sequence to abort.
+Tracing the route to 10.0.12.10
+VRF info: (vrf in name/id, vrf out name/id)
+  1 10.12.20.1 0 msec 0 msec 0 msec
+  2 10.12.20.4 1 msec 0 msec 0 msec
+  3 10.0.12.10 2 msec 4 msec 5 msec
+
+---- traceroute #2 -> 10.0.12.10 ----
+Type escape sequence to abort.
+Tracing the route to 10.0.12.10
+VRF info: (vrf in name/id, vrf out name/id)
+  1 10.12.20.4 0 msec 0 msec 1 msec
+  2 10.0.12.10 0 msec 0 msec 1 msec
+
+---- ping 1400 -> 10.0.12.10 ----
+Type escape sequence to abort.
+Sending 5, 1400-byte ICMP Echos to 10.0.12.10, timeout is 2 seconds:
+Packet sent with a source address of 10.0.11.1 
+!!!!!
+Success rate is 100 percent (5/5), round-trip min/avg/max = 1/1/1 ms

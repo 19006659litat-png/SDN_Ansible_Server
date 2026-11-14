@@ -1,0 +1,22 @@
+---
+- name: Pruebas sobre equipos cisco - BRANCHES -
+  hosts: cisco_routers_branches
+  gather_facts: no
+
+  tasks:
+
+    - name: T.1t. set Eth0/0 down
+      cisco.ios.ios_command:
+        commands:
+          - enable
+          - config terminal
+          - interface e0/0
+          - 
+      register: security_associations
+      changed_when: false
+
+    - name: T.1r. Security Associations result
+      debug:
+        msg: "SECURITY ASSOCIATIONS: {{ inventory_hostname }}: {{ security_associations.stdout[0] }} "
+
+

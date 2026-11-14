@@ -1,0 +1,25 @@
+---
+- name: Configuracion de la seguridad en los túneles y ospf en Routers Cisco - BRANCHES -
+#  hosts: cisco_routers_branches
+  hosts: all
+  gather_facts: no
+
+  tasks:
+
+    - name: OSPF IPv4 - router ospf 1 -
+      cisco.ios.ios_config:
+        parents: "router ospf 1"
+        lines:
+          - router-id 10.254.0.{{ router_id }}
+          - network 10.12.20.0 0.0.0.255 area 0
+          - network 10.0.{{ lan_site_id }}.0 0.0.0.255 area 0
+          - network 10.254.0.{{ router_id }} 0.0.0.0 area 0
+          - passive-interface Ethernet0/1
+
+    - name: OSPFv3 IPv6 - ipv6 router ospf 1 -
+      cisco.ios.ios_config:
+        parents: "ipv6 router ospf 1"
+        lines:
+          - router-id 10.254.0.{{ router_id }}
+          - passive-interface Ethernet0/1
+

@@ -1,0 +1,10 @@
+---
+- name: Borrar configuración de las interfaces
+  import_playbook: /home/peet/proyecto-sdn/pb_clear_ifaces.yml
+
+- name: Borrar configuración del OSPF
+  import_playbook: /home/peet/proyecto-sdn/pb_clear_ospf.yml
+
+- name: Borra configuración IPSEC IKEV2
+  import_playbook: /home/peet/proyecto-sdn/pb_clear_crypto.yml
+
