@@ -1,0 +1,221 @@
+R2-HQ#show run 
+Building configuration...
+
+  
+Current configuration : 3397 bytes
+!
+! Last configuration change at 21:43:30 UTC Fri Nov 13 2026
+!
+version 15.7
+service timestamps debug datetime msec
+service timestamps log datetime msec
+no service password-encryption
+!
+hostname R2-HQ
+!
+boot-start-marker
+boot-end-marker
+!
+!
+!
+no aaa new-model
+!
+!
+!
+mmi polling-interval 60
+no mmi auto-configure
+no mmi pvc
+mmi snmp-timeout 180
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+
+
+!
+!
+!
+!
+no ip domain lookup
+ip domain name galileo.edu
+ip cef
+ipv6 unicast-routing
+ipv6 cef
+!
+multilink bundle-name authenticated
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+redundancy
+!
+!
+! 
+!
+crypto ikev2 proposal IKEV2_PROPOSAL_TUNNEL 
+ encryption aes-cbc-256
+ integrity sha256
+ group 14
+!
+crypto ikev2 policy IKEV2_POLICY_TUNNEL 
+ proposal IKEV2_PROPOSAL_TUNNEL
+!
+crypto ikev2 keyring KEYPASS_TUNNEL
+ peer ANY_NODE_TUNNEL
+  address 0.0.0.0 0.0.0.0
+  pre-shared-key sdnprcfisicc
+ !
+!
+!
+crypto ikev2 profile IKEV2_PROFILE_TUNNEL
+ match identity remote address 0.0.0.0 
+ authentication remote pre-share
+ authentication local pre-share
+ keyring local KEYPASS_TUNNEL
+ dpd 10 2 on-demand
+!
+!
+!
+crypto ipsec transform-set ESP-AES256-SHA256 esp-aes 256 esp-sha256-hmac 
+ mode transport
+!
+crypto ipsec profile IKE_IPSEC_PROFILE_TUNNEL
+ set transform-set ESP-AES256-SHA256 
+ set ikev2-profile IKEV2_PROFILE_TUNNEL
+!
+!
+!
+!
+!
+!
+!
+interface Loopback0
+ ip address 10.254.0.2 255.255.255.255
+ ipv6 address 2001:1220:508:254::2/128
+ ospfv3 1 ipv6 area 0
+ ospfv3 1 ipv4 area 0
+!
+interface Tunnel2
+ bandwidth 1000
+ ip address 10.12.20.2 255.255.255.0
+ no ip redirects
+ ip mtu 1400
+ ip nhrp map 10.12.20.1 192.168.0.101
+ ip nhrp map multicast 192.168.0.101
+ ip nhrp network-id 100000
+ ip nhrp holdtime 300
+ ip nhrp nhs 10.12.20.1
+ ip nhrp redirect
+ ip tcp adjust-mss 1360
+ delay 1000
+ ipv6 address FE80::2 link-local
+ ipv6 address 2001:1220:508::2/64
+ ipv6 mtu 1400
+ ipv6 nhrp map 2001:1220:508::1/128 192.168.0.101
+ ipv6 nhrp map FE80::1/128 192.168.0.101
+ ipv6 nhrp map multicast 192.168.0.101
+ ipv6 nhrp network-id 100000
+ ipv6 nhrp holdtime 300
+ ipv6 nhrp nhs 2001:1220:508::1
+ ipv6 nhrp redirect
+ ospfv3 1 ipv4 area 0
+ ospfv3 1 ipv4 network broadcast
+ ospfv3 1 ipv4 hello-interval 3
+ ospfv3 1 ipv4 dead-interval 12
+ ospfv3 1 ipv4 priority 254
+ ospfv3 1 ipv6 area 0
+ ospfv3 1 ipv6 network broadcast
+ ospfv3 1 ipv6 hello-interval 3
+ ospfv3 1 ipv6 dead-interval 12
+ ospfv3 1 ipv6 priority 254
+ tunnel source Ethernet0/0
+ tunnel mode gre multipoint
+ tunnel key 100000
+ tunnel protection ipsec profile IKE_IPSEC_PROFILE_TUNNEL
+!
+interface Ethernet0/0
+ description gateway
+ ip address 192.168.0.102 255.255.255.0
+ duplex auto
+!
+interface Ethernet0/1
+ no ip address
+ shutdown
+ duplex auto
+!
+interface Ethernet0/2
+ no ip address
+ shutdown 
+ duplex auto
+!
+interface Ethernet0/3
+ no ip address
+ shutdown
+ duplex auto
+!
+router ospfv3 1
+ router-id 10.254.0.2
+ !
+ address-family ipv4 unicast
+  passive-interface default
+  no passive-interface Loopback0
+  no passive-interface Tunnel2
+ exit-address-family
+ !
+ address-family ipv6 unicast
+  passive-interface default
+  no passive-interface Loopback0
+  no passive-interface Tunnel2
+  router-id 10.254.0.2
+ exit-address-family
+!         
+ip forward-protocol nd
+!
+!
+no ip http server
+no ip http secure-server
+ip ssh version 2
+!
+ipv6 ioam timestamp
+!
+!
+!
+control-plane
+!
+!
+!
+!
+!
+!
+!
+!
+line con 0
+ logging synchronous
+line aux 0
+line vty 0 4
+ login local
+ transport input ssh
+!
+ntp server 34.202.215.187
+ntp server pool.ntp.org
+!
+end
+
+

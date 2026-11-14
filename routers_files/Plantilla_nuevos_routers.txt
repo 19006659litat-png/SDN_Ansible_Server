@@ -1,0 +1,24 @@
+enable
+conf t
+no service config
+no boot network
+hostname R{{ router_id }}
+no ip domain-lookup
+ip domain name galileo.edu
+multilink bundle-name authenticated
+username netadmin privilege 15 secret cisco
+crypto key generate rsa general-keys modulus 2048
+
+
+ip ssh version 2
+interface Ethernet0/0
+ desc to_Internet
+ ip address 192.168.0.10{{ router_id }} 255.255.255.0
+ no shut
+exit
+line vty 0 4
+ login local
+ transport input ssh
+end
+wr
+
