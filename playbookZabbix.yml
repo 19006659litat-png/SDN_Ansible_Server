@@ -1,0 +1,72 @@
+---
+- name: Aprovisionamiento de Host en Zabbix
+  hosts: localhost
+  gather_facts: no
+  vars:
+    zabbix_url: "http://192.168.5.141/zabbix/api_jsonrpc.php"
+    zabbix_user: "zabbix_admin"
+    zabbix_pass: "password"
+    host_name: "{{ host }}"
+
+  tasks:
+    - name: Autenticar y obtener token de la API de Zabbix
+      ansible.builtin.uri:
+        url: "{{ zabbix_url }}"
+        method: POST
+        body_format: json
+        body:
+          jsonrpc: "2.0"
+          method: "user.login"
+          params:
+            username: "{{ zabbix_user }}"
+            password: "{{ zabbix_pass }}"
+          id: 1
+      register: zabbix_login
+
+    - name: Validar si la autenticación fue exitosa
+      ansible.builtin.fail:
+        msg: "Error en la autenticación con Zabbix: {{ zabbix_login.json.error | default('Respuesta desconocida') }}"
+      when: zabbix_login.json.result is not defined
+
+    - name: Establecer el token de autenticación
+      ansible.builtin.set_fact:
+        zabbix_auth_token: "{{ zabbix_login.json.result }}"
+
+    - name: Verificar si el host ya existe en Zabbix
+      ansible.builtin.uri:
+        url: "{{ zabbix_url }}"
+        method: POST
+        body_format: json
+        body:
+          jsonrpc: "2.0"
+          method: "host.get"
+          params:
+            output: ["hostid", "host"]
+            filter:
+              host: "{{ host_name }}"
+          auth: "{{ zabbix_auth_token }}"
+          id: 2
+      register: zabbix_host_info
+
+    - name: Crear host en Zabbix si no existe
+      ansible.builtin.uri:
+        url: "{{ zabbix_url }}"
+        method: POST
+        body_format: json
+        body:
+          jsonrpc: "2.0"
+          method: "host.create"
+          params:
+            host: "{{ host_name }}"
+            interfaces:
+              - type: 1
+                main: 1
+                useip: 1
+                ip: "127.0.0.1"
+                dns: ""
+                port: "10050"
+            groups:
+              - groupid: "2"
+          auth: "{{ zabbix_auth_token }}"
+          id: 3
+      when: zabbix_host_info.json.get('result', []) | length == 0

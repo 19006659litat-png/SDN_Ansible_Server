@@ -1,0 +1,59 @@
+---
+- name: Decommissioning de Host en Zabbix
+  hosts: localhost
+  gather_facts: no
+  vars:
+    zabbix_url: "http://192.168.5.141/zabbix/api_jsonrpc.php"
+    zabbix_user: "Admin"
+    zabbix_pass: "Admin123"
+    host_name: "{{ host }}"
+
+  tasks:
+    - name: Autenticar y obtener token de la API de Zabbix
+      ansible.builtin.uri:
+        url: "{{ zabbix_url }}"
+        method: POST
+        body_format: json
+        body:
+          jsonrpc: "2.0"
+          method: "user.login"
+          params:
+            username: "{{ zabbix_user }}"
+            password: "{{ zabbix_pass }}"
+          id: 1
+      register: zabbix_login
+
+    - name: Establecer el token de autenticación
+      ansible.builtin.set_fact:
+        zabbix_auth_token: "{{ zabbix_login.json.result }}"
+
+    - name: Buscar el ID del host en Zabbix
+      ansible.builtin.uri:
+        url: "{{ zabbix_url }}"
+        method: POST
+        body_format: json
+        body:
+          jsonrpc: "2.0"
+          method: "host.get"
+          params:
+            output: ["hostid", "host"]
+            filter:
+              host: "{{ host_name }}"
+          auth: "{{ zabbix_auth_token }}"
+          id: 2
+      register: zabbix_host_info
+
+    - name: Eliminar host de Zabbix si existe
+      ansible.builtin.uri:
+        url: "{{ zabbix_url }}"
+        method: POST
+        body_format: json
+        body:
+          jsonrpc: "2.0"
+          method: "host.delete"
+          params:
+            - "{{ item.hostid }}"
+          auth: "{{ zabbix_auth_token }}"
+          id: 3
+      loop: "{{ zabbix_host_info.json.get('result', []) }}"
+      when: zabbix_host_info.json.get('result', []) | length > 0
